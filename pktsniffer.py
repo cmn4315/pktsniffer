@@ -3,54 +3,77 @@ Caleb Naeger - cmn4315@rit.edu
 Foundations of Computer Networks
 """
 import argparse
+from os import wait
+from typing import Union
 import scapy.all as scapy
 
+def build_filter_string(flags):
+    string_flags = ["host","port","net"]
+    boolean_flags = ["ip","tcp","udp","icmp"]
 
-def host_filter(packets, host):
-    ret_packs = []
-    for packet in packets:
-        if packet
+    and_string = ""
+    or_string = ""
 
-
-def port_filter(packets, port):
-    pass
-
-
-def net_filter(packets, net):
-    pass
-
-
-def boolean_filters(packets, flags):
-    ret_packs = []
-    if "ip" in flags and flags["ip"]:
-        ret_packs.append(proto_filter(packets, 'IP'))
-    if "tcp" in flags and flags["tcp"]:
-        ret_packs.append(proto_filter(packets, 'TCP'))
-    if "udp" in flags and flags["udp"]:
-        ret_packs.append(proto_filter(packets, 'UDP'))
-    if "icmp" in flags and flags["icmp"]:
-        ret_packs.append(proto_filter(packets, 'ICMP'))
-
-    return ret_packs
-
-
-def proto_filter(packets, proto):
-    ret_packs = []
-    for packet in packets:
-        if packet.haslayer(proto):
-            ret_packs.append(packet)
-
-
-def process_packets(filename: str, count: int, flags: dict):
-    packets = scapy.rdpcap(filename, count=count)
-    if "host" in flags:
-        packets = host_filter(packets, flags["host"])
-    if "port" in flags:
-        packets = port_filter(packets, flags["port"])
-    if "net" in flags:
-        packets = net_filter(packets, flags["net"])
+    for flag in string_flags:
+        if flags[flag] is not None:
+            if and_string != "":
+                and_string += " && "
+            and_string += f"{flag} {flags[flag]}"
+    for flag in boolean_flags:
+        if flags[flag]:
+            if or_string != "":
+                or_string += " || "
+            or_string += f"{flag}"
     
-    packets = boolean_filters(packets, flags)
+    if and_string != "":
+        and_string = f"({and_string})"
+    if or_string != "":
+        or_string = f"({or_string})"
+
+    return f"{and_string}{ ' && ' if and_string != "" and or_string != "" else ""}{or_string}"
+
+
+def ethernet_string(packet) -> str:
+    string = "Ethernet:\n"
+    for field in packet['Ether'].fields.keys():
+        string += f"\t{field}: {packet['Ether'].fields[field]}\n"
+    return string
+
+
+def ether_proto_string(packet) -> str:
+    layer = packet['Ether'].payload
+    string = f"{layer.name}:\n"
+    for field in layer.fields.keys():
+        string += f"\t\t{field}: {layer.fields[field]}\n"
+    return string
+
+
+def proto_string(packet) -> str:
+    layer = packet['Ether'].payload.payload
+    string = f"{layer.name}:\n"
+    for field in layer.fields:
+        string += f"\t\t\t{field}: {layer.fields[field]}\n"
+    return string
+
+def print_packets(packets):
+    for packet in packets:
+        string = "-"*80 + '\n'
+        string += ethernet_string(packet)
+        string += ether_proto_string(packet)
+        string += proto_string(packet)
+        string += "-"*80 + '\n'
+        print(string)
+
+
+def process_packets(filename: str, count: Union[int, None], filter:str):
+    packets = []
+    print(filter)
+    if count is not None:
+        packets = scapy.sniff(offline=filename, count=count, filter=filter)
+    else:
+        packets = scapy.sniff(offline=filename, filter=filter)
+
+    print_packets(packets)
 
 
 def main():
@@ -76,7 +99,8 @@ def main():
         if arg:
             flags[arg] = getattr(args,arg)
     print(flags)
-    process_packets(args.r, args.c, flags)
+    filter = build_filter_string(flags)
+    process_packets(args.r, args.c, filter)
 
 if __name__ == "__main__":
     main()
