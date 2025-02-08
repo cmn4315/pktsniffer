@@ -1,13 +1,24 @@
 """ 
+pktsniffer.py
+A program to read, filter, and display packets from a .pcap file
+
 Caleb Naeger - cmn4315@rit.edu
 Foundations of Computer Networks
+
+Usage:
+    pktsniffer.py [-h] -r R [-c C] [-host HOST] [-port PORT] [-ip] [-tcp]
+                     [-udp] [-icmp] [-net NET]
 """
 import argparse
-from os import wait
 from typing import Union
 import scapy.all as scapy
 
+
 def build_filter_string(flags):
+    """Builds the filter string to be passed to scapy's sniff() method
+    :param flags: a dictionary of flags and their values, to be parsed into the filter string.
+    :return: the filter string, ready to be passed to sniff()
+    """
     string_flags = ["host","port","net"]
     boolean_flags = ["ip","tcp","udp","icmp"]
 
@@ -34,6 +45,10 @@ def build_filter_string(flags):
 
 
 def ethernet_string(packet) -> str:
+    """Create the string representation for the 'Ethernet' layer of a packet
+    :param packet: the packet to get the string for
+    :return: the string representation of the Ethernet layer
+    """
     string = "Ethernet:\n"
     for field in packet['Ether'].fields.keys():
         string += f"\t{field}: {packet['Ether'].fields[field]}\n"
@@ -41,6 +56,10 @@ def ethernet_string(packet) -> str:
 
 
 def ether_proto_string(packet) -> str:
+    """Create the string representation for the Ethernet Protocol layer of a packet, usually 'IP'
+    :param packet: the packet to get the string for
+    :return: the string representation of the Ethernet Protocol layer
+    """
     layer = packet['Ether'].payload
     string = f"{layer.name}:\n"
     for field in layer.fields.keys():
@@ -49,6 +68,10 @@ def ether_proto_string(packet) -> str:
 
 
 def proto_string(packet) -> str:
+    """Create the string representation for the Protocol layer of a packet
+    :param packet: the packet to get the string for
+    :return: the string representation of the Protocol layer
+    """
     layer = packet['Ether'].payload.payload
     string = f"{layer.name}:\n"
     for field in layer.fields:
@@ -56,6 +79,10 @@ def proto_string(packet) -> str:
     return string
 
 def print_packets(packets):
+    """Print each packet in a list
+    :param packets: the list of packets to print
+    :return: None
+    """
     for packet in packets:
         string = "-"*80 + '\n'
         string += ethernet_string(packet)
@@ -66,8 +93,13 @@ def print_packets(packets):
 
 
 def process_packets(filename: str, count: Union[int, None], filter:str):
+    """Process packets from a file, filtering according to the filter string
+    :param filename: name of pcap file to read
+    :param count: number of packets to read
+    :param filter: the filter string, following Berkeley Packet Filter (BPF) syntax
+    :return: None
+    """
     packets = []
-    print(filter)
     if count is not None:
         packets = scapy.sniff(offline=filename, count=count, filter=filter)
     else:
@@ -94,11 +126,12 @@ def main():
     
     # Parse arguments
     args = parser.parse_args()
+
     flags = {}
     for arg in vars(args):
         if arg:
             flags[arg] = getattr(args,arg)
-    print(flags)
+
     filter = build_filter_string(flags)
     process_packets(args.r, args.c, filter)
 
