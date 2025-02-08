@@ -3,8 +3,15 @@
 ## Description
 `pktsniffer` is a Python utility for reading, filtering, and displaying the contents of packet capture (.pcap) files. It supports filtering based on protocol, port number, network number, and hostname.
 
-## Getting Started
-This project depends on the Scapy Python library. To install this and other required dependencies, run the following command:
+## Getting Started:
+### Starting the Virtual Environment
+When installing dependencies for any Python project, it is good practice to do so from within a virtual environment.
+To create a virtual environment for this project, run `python3 -m venv .venv` from a terminal window. 
+To start the venv, on a Unix-based system, run `source .venv/bin/activate` from the same directory.
+
+### Installing Dependencies
+This project depends on the Scapy Python library. To install this (and other required dependencies for building the documentation),
+run the following command from within the venv:
 `pip install -r requirements.txt`
 
 ## Running pktsniffer

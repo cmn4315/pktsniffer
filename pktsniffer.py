@@ -17,7 +17,6 @@ import scapy.all as scapy
 def build_filter_string(flags):
     """Builds the filter string to be passed to scapy's sniff() method
     :param flags: a dictionary of flags and their values, to be parsed into the filter string.
-    :return: the filter string, ready to be passed to sniff()
     """
     string_flags = ["host","port","net"]
     boolean_flags = ["ip","tcp","udp","icmp"]
@@ -47,7 +46,6 @@ def build_filter_string(flags):
 def ethernet_string(packet) -> str:
     """Create the string representation for the 'Ethernet' layer of a packet
     :param packet: the packet to get the string for
-    :return: the string representation of the Ethernet layer
     """
     string = "Ethernet:\n"
     for field in packet['Ether'].fields.keys():
@@ -58,7 +56,6 @@ def ethernet_string(packet) -> str:
 def ether_proto_string(packet) -> str:
     """Create the string representation for the Ethernet Protocol layer of a packet, usually 'IP'
     :param packet: the packet to get the string for
-    :return: the string representation of the Ethernet Protocol layer
     """
     layer = packet['Ether'].payload
     string = f"{layer.name}:\n"
@@ -70,7 +67,6 @@ def ether_proto_string(packet) -> str:
 def proto_string(packet) -> str:
     """Create the string representation for the Protocol layer of a packet
     :param packet: the packet to get the string for
-    :return: the string representation of the Protocol layer
     """
     layer = packet['Ether'].payload.payload
     string = f"{layer.name}:\n"
@@ -81,7 +77,6 @@ def proto_string(packet) -> str:
 def print_packets(packets):
     """Print each packet in a list
     :param packets: the list of packets to print
-    :return: None
     """
     for packet in packets:
         string = "-"*80 + '\n'
@@ -97,7 +92,6 @@ def process_packets(filename: str, count: Union[int, None], filter:str):
     :param filename: name of pcap file to read
     :param count: number of packets to read
     :param filter: the filter string, following Berkeley Packet Filter (BPF) syntax
-    :return: None
     """
     packets = []
     if count is not None:
@@ -115,7 +109,7 @@ def main():
     # Add arguments
     parser.add_argument('-r', type=str, required=True, help='The name of the file to read.')
     parser.add_argument('-c', type=int, required=False, help='The number of packets to analyze.')
-    parser.add_argument('-host', required=False, type=str, help="Apply a filter to the analyzer, by host IP.")
+    parser.add_argument('-host', required=False, type=str, help="Apply a filter to the analyzer, by hostname.")
     parser.add_argument('-port', required=False, type=str, help="Apply a filter to the analyzer, by port number.")
     parser.add_argument('-ip', action='store_true', required=False, help="Include Ethernet packets with the IP protocol")
     parser.add_argument('-tcp', action='store_true', required=False, help="Include TCP packets.")
